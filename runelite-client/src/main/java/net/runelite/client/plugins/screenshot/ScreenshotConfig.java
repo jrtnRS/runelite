@@ -187,14 +187,24 @@ public interface ScreenshotConfig extends Config
 		return false;
 	}
 
+    @ConfigItem(
+            keyName = "useSubfolders",
+            name = "Use Subfolders",
+            description = "Groups screenshots in subfolders",
+            position = 14
+    )
+    default boolean useSubfolders() { return false; }
+
 	@ConfigItem(
 		keyName = "hotkey",
 		name = "Screenshot hotkey",
 		description = "When you press this key a screenshot will be taken",
-		position = 14
+		position = 15
 	)
 	default Keybind hotkey()
 	{
 		return Keybind.NOT_SET;
 	}
+
+
 }

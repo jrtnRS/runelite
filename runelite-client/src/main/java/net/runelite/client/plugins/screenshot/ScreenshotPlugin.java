@@ -279,6 +279,10 @@ public class ScreenshotPlugin extends Plugin
 			// "You have completed The Corsair Curse!"
 			String text = client.getWidget(WidgetInfo.QUEST_COMPLETED_NAME_TEXT).getText();
 			fileName = "Quest(" + text.substring(19, text.length() - 1) + ")";
+			if(config.useSubfolders())
+            {
+                fileName = "Quest\\" + fileName;
+            }
 		}
 
 		if (fileName != null)
@@ -292,7 +296,7 @@ public class ScreenshotPlugin extends Plugin
 	{
 		if (config.screenshotPlayerDeath())
 		{
-			takeScreenshot("Death " + format(new Date()));
+			takeScreenshot("Death\\" + "Death " + format(new Date()));
 		}
 	}
 
@@ -304,6 +308,10 @@ public class ScreenshotPlugin extends Plugin
 			final Player player = playerLootReceived.getPlayer();
 			final String name = player.getName();
 			String fileName = "Kill " + name + " " + format(new Date());
+			if(config.useSubfolders())
+            {
+                fileName = "Kills\\" + fileName;
+            }
 			takeScreenshot(fileName);
 		}
 	}
@@ -372,6 +380,10 @@ public class ScreenshotPlugin extends Plugin
 		if (config.screenshotPet() && PET_MESSAGES.stream().anyMatch(chatMessage::contains))
 		{
 			String fileName = "Pet " + format(new Date());
+			if(config.useSubfolders())
+            {
+                fileName = "Pets\\" + fileName;
+            }
 			takeScreenshot(fileName);
 		}
 
@@ -383,6 +395,10 @@ public class ScreenshotPlugin extends Plugin
 				String bossName = m.group(1);
 				String bossKillcount = m.group(2);
 				String fileName = bossName + "(" + bossKillcount + ")";
+				if(config.useSubfolders())
+                {
+                    fileName = "Boss Kills\\" + bossName + "\\" + fileName;
+                }
 				takeScreenshot(fileName);
 			}
 		}
@@ -394,6 +410,10 @@ public class ScreenshotPlugin extends Plugin
 			{
 				String valuableDropName = m.group(1);
 				String fileName = "Valuable drop " + valuableDropName + " " + format(new Date());
+				if(config.useSubfolders())
+                {
+                    fileName = "Valuable Drops\\" + fileName;
+                }
 				takeScreenshot(fileName);
 			}
 		}
@@ -405,6 +425,9 @@ public class ScreenshotPlugin extends Plugin
 			{
 				String untradeableDropName = m.group(1);
 				String fileName = "Untradeable drop " + untradeableDropName + " " + format(new Date());
+				if(config.useSubfolders()) {
+				    fileName = "Untradeable Drops\\" + fileName;
+                }
 				takeScreenshot(fileName);
 			}
 		}
@@ -417,6 +440,9 @@ public class ScreenshotPlugin extends Plugin
 				String result = m.group(1);
 				String count = m.group(2);
 				String fileName = "Duel " + result + " (" + count + ")";
+				if(config.useSubfolders()) {
+				    fileName = "Duels\\" + fileName;
+                }
 				takeScreenshot(fileName);
 			}
 		}
@@ -460,6 +486,10 @@ public class ScreenshotPlugin extends Plugin
 			case KINGDOM_GROUP_ID:
 			{
 				fileName = "Kingdom " + LocalDate.now();
+				if(config.useSubfolders())
+                {
+                    fileName = "Kingdom\\" + fileName;
+                }
 				takeScreenshot(fileName);
 				break;
 			}
@@ -468,12 +498,20 @@ public class ScreenshotPlugin extends Plugin
 				if (chambersOfXericNumber != null)
 				{
 					fileName = "Chambers of Xeric(" + chambersOfXericNumber + ")";
+					if(config.useSubfolders())
+                    {
+                        fileName = "Chambers of Xeric\\" + fileName;
+                    }
 					chambersOfXericNumber = null;
 					break;
 				}
 				else if (chambersOfXericChallengeNumber != null)
 				{
 					fileName = "Chambers of Xeric Challenge Mode(" + chambersOfXericChallengeNumber + ")";
+					if(config.useSubfolders())
+					{
+					    fileName = "Chambers of Xeric Challenge Mode\\" + fileName;
+                    }
 					chambersOfXericChallengeNumber = null;
 					break;
 				}
@@ -490,6 +528,10 @@ public class ScreenshotPlugin extends Plugin
 				}
 
 				fileName = "Theatre of Blood(" + theatreOfBloodNumber + ")";
+				if(config.useSubfolders())
+				{
+				    fileName = "Theatre of Blood\\" + fileName;
+                }
 				theatreOfBloodNumber = null;
 				break;
 			}
@@ -501,6 +543,10 @@ public class ScreenshotPlugin extends Plugin
 				}
 
 				fileName = "Barrows(" + barrowsNumber + ")";
+				if(config.useSubfolders())
+				{
+				    fileName = "Barrows\\" + fileName;
+                }
 				barrowsNumber = null;
 				break;
 			}
@@ -519,7 +565,11 @@ public class ScreenshotPlugin extends Plugin
 					return;
 				}
 
-				fileName = Character.toUpperCase(clueType.charAt(0)) + clueType.substring(1) + "(" + clueNumber + ")";
+				String formattedType = Character.toUpperCase(clueType.charAt(0)) + clueType.substring(1);
+				fileName = formattedType + "(" + clueNumber + ")";
+				if(config.useSubfolders()) {
+				    fileName = "Clue Scrolls\\" + formattedType + "\\" + fileName;
+                }
 				clueType = null;
 				clueNumber = null;
 				break;
@@ -555,7 +605,12 @@ public class ScreenshotPlugin extends Plugin
 
 		String skillName = m.group(1);
 		String skillLevel = m.group(2);
-		return skillName + "(" + skillLevel + ")";
+		String filename = skillName + "(" + skillLevel + ")";
+		if(config.useSubfolders())
+        {
+            filename = skillName + "\\" + filename;
+        }
+		return filename;
 	}
 
 	/**
@@ -647,6 +702,8 @@ public class ScreenshotPlugin extends Plugin
 		try
 		{
 			File screenshotFile = new File(playerFolder, fileName + ".png");
+
+			screenshotFile.mkdirs();
 
 			ImageIO.write(screenshot, "PNG", screenshotFile);
 
