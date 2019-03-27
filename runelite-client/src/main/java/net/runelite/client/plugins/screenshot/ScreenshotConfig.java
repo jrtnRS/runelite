@@ -193,7 +193,7 @@ public interface ScreenshotConfig extends Config
             description = "Groups screenshots in subfolders",
             position = 14
     )
-    default boolean useSubfolders() { return false; }
+    default boolean useSubfolders() { return true; }
 
 	@ConfigItem(
 		keyName = "hotkey",
