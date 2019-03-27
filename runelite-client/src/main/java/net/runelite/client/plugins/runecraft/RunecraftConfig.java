@@ -32,6 +32,14 @@ import net.runelite.client.config.ConfigItem;
 @ConfigGroup("runecraft")
 public interface RunecraftConfig extends Config
 {
+    @ConfigItem(
+            keyName = "swapFillPouch",
+            name = "Swap fill pouch",
+            description = "Sets Fill as the left click option when in bank",
+            position = 1
+    )
+    default boolean swapFillPouch() { return true;}
+
 	@ConfigItem(
 		keyName = "showBindNeck",
 		name = "Show Binding Neck charges",

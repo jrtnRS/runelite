@@ -27,23 +27,18 @@ package net.runelite.client.plugins.menuentryswapper;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import javax.inject.Inject;
 import lombok.Getter;
 import lombok.Setter;
-import net.runelite.api.Client;
-import net.runelite.api.GameState;
-import net.runelite.api.ItemComposition;
-import net.runelite.api.MenuAction;
-import net.runelite.api.MenuEntry;
-import net.runelite.api.NPC;
-import net.runelite.api.events.ConfigChanged;
-import net.runelite.api.events.FocusChanged;
-import net.runelite.api.events.MenuEntryAdded;
-import net.runelite.api.events.MenuOpened;
-import net.runelite.api.events.MenuOptionClicked;
-import net.runelite.api.events.PostItemComposition;
-import net.runelite.api.events.WidgetMenuOptionClicked;
+import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.*;
+import net.runelite.api.events.*;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
@@ -64,6 +59,7 @@ import org.apache.commons.lang3.ArrayUtils;
 	tags = {"npcs", "inventory", "items", "objects"},
 	enabledByDefault = false
 )
+@Slf4j
 public class MenuEntrySwapperPlugin extends Plugin
 {
 	private static final String CONFIGURE = "Configure";
@@ -129,6 +125,9 @@ public class MenuEntrySwapperPlugin extends Plugin
 
 	@Setter
 	private boolean shiftModifier = false;
+
+	private Actor menaphiteThug;
+    private Instant lastInteracting;
 
 	@Provides
 	MenuEntrySwapperConfig provideConfig(ConfigManager configManager)
@@ -373,10 +372,8 @@ public class MenuEntrySwapperPlugin extends Plugin
 
 		if (option.equals("talk-to"))
 		{
-			if (config.swapPickpocket() && target.contains("h.a.m."))
-			{
-				swap("pickpocket", option, target, true);
-			}
+			String o = shiftModifier ? "knock-out" : "pickpocket";
+		    swap(o, option, target, true);
 
 			if (config.swapAbyssTeleport() && target.contains("mage of zamorak"))
 			{
@@ -445,10 +442,19 @@ public class MenuEntrySwapperPlugin extends Plugin
 				swap("decant", option, target, true);
 			}
 
-			if (config.swapQuick())
-			{
+			if (config.swapQuick()) {
 				swap("quick-travel", option, target, true);
 			}
+		}
+        else if(config.swapConstruction() && target.equals("door") && (option.equals("open") || option.equals("examine"))) {
+            remove(target, "open", "pick-lock", "force", "walk here", "examine");
+        }
+        else if(config.swapConstruction() && target.equals("door space") && (option.equals("walk here") || option.equals("examine"))) {
+            remove(target, "walk here", "examine");
+        }
+		else if(config.powerDrop() && (target.contains("raw") || target.contains("ore")
+                || target.contains("logs") || target.contains("leaping") || (target.contains("seed") && !target.equals("seed box")))) {
+			swap("drop", option, target, true);
 		}
 		else if (config.swapTravel() && option.equals("pass") && target.equals("energy barrier"))
 		{
@@ -497,6 +503,12 @@ public class MenuEntrySwapperPlugin extends Plugin
 				swap("configure", option, target, false);
 			}
 		}
+		else if (config.swapTanAll() && option.contains("tan")) {
+            swap("tan all", option, target, true);
+        }
+        else if (config.swapSmithAll() && option.contains("smith")) {
+            swap("smith all", option, target, true);
+        }
 		else if (config.swapFairyRing() == FairyRingMode.ZANARIS && option.equals("tree"))
 		{
 			swap("zanaris", option, target, false);
@@ -554,12 +566,11 @@ public class MenuEntrySwapperPlugin extends Plugin
 			}
 		}
 		// Put all item-related swapping after shift-click
-		else if (config.swapTeleportItem() && option.equals("wear"))
+		else if (config.swapTeleportItem() && option.equals("remove"))
 		{
-			swap("rub", option, target, true);
-			swap("teleport", option, target, true);
+			swap("duel arena", option, target, true);
 		}
-		else if (option.equals("wield"))
+		else if (option.equals("wear"))
 		{
 			if (config.swapTeleportItem())
 			{
@@ -570,6 +581,21 @@ public class MenuEntrySwapperPlugin extends Plugin
 		{
 			swap("use", option, target, true);
 		}
+		else if(config.hebloreMode() && (option.equals("eat") || option.equals("drink")) ) {
+		    swap("use", option, target, true);
+        }
+        else if(config.swapFillPouch() && target.contains("pouch")) {
+            if(option.contains("deposit")) {
+                swap("fill", option, target, true);
+                swap("empty", option, target, true);
+            } else {
+                if(shiftModifier) {
+                    swap("fill", option, target, true);
+                } else {
+                    swap("empty", option, target, true);
+                }
+            }
+        }
 	}
 
 	@Subscribe
@@ -632,10 +658,38 @@ public class MenuEntrySwapperPlugin extends Plugin
 			MenuEntry entry = entries[idxA];
 			entries[idxA] = entries[idxB];
 			entries[idxB] = entry;
-
+            log.debug(String.format("Swapped entries [%s -> %s] for target [%s]", optionB, optionA, target));
+            log.debug(String.format("Entries after swap: %s", Arrays.toString(entries)));
 			client.setMenuEntries(entries);
 		}
 	}
+
+    private void remove(String target, String... options)
+    {
+        MenuEntry[] entries = client.getMenuEntries();
+        boolean hasTarget = false;
+        for (MenuEntry entry : entries)
+        {
+            if (Text.removeTags(entry.getTarget()).toLowerCase().equals(target))
+            {
+                hasTarget = true;
+                break;
+            }
+        }
+        if (hasTarget)
+        {
+            List<MenuEntry> validEntries = new ArrayList<>();
+            List<String> opts = Arrays.asList(options);
+            for (MenuEntry entry : entries)
+            {
+                if (!opts.contains(Text.removeTags(entry.getOption()).toLowerCase()))
+                {
+                    validEntries.add(entry);
+                }
+            }
+            client.setMenuEntries(validEntries.toArray(new MenuEntry[validEntries.size()]));
+        }
+    }
 
 	private void removeShiftClickCustomizationMenus()
 	{

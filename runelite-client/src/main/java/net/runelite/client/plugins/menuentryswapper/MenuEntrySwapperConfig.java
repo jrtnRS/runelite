@@ -163,6 +163,13 @@ public interface MenuEntrySwapperConfig extends Config
 	}
 
 	@ConfigItem(
+	        keyName = "swapFillPouch",
+            name = "Fill pouch",
+            description = "Swaps fill with deposit when in bank"
+    )
+    default boolean swapFillPouch() { return true; }
+
+	@ConfigItem(
 		keyName = "swapHarpoon",
 		name = "Harpoon",
 		description = "Swap Cage, Big Net with Harpoon on Fishing spot"
@@ -281,4 +288,40 @@ public interface MenuEntrySwapperConfig extends Config
 	{
 		return true;
 	}
+
+	@ConfigItem(
+			keyName = "powerDrop",
+			name = "Power Drop",
+			description = "Swap drop and use options on raw materials for easier dropping"
+	)
+	default boolean powerDrop() { return false; }
+
+	@ConfigItem(
+	        keyName = "swapConstruction",
+            name = "Construction",
+            description = "Send build and remove to the top, enabling left click construction"
+    )
+    default boolean swapConstruction() { return true; }
+
+    @ConfigItem(
+            keyName = "swapSmithAll",
+            name = "Swap Smith All",
+            description = "Swap Smith All with Smith 1"
+    )
+    default boolean swapSmithAll() { return true; }
+
+    @ConfigItem(
+            keyName = "swapTanAll",
+            name = "Swap Tan All",
+            description = "Swap Tan All with Tan 1"
+    )
+    default boolean swapTanAll() { return true; }
+
+    @ConfigItem(
+            keyName = "herbloreMode",
+            name = "Herblore Mode",
+            description = "Swaps consume options for use"
+    )
+    default boolean hebloreMode() { return false; }
+
 }
